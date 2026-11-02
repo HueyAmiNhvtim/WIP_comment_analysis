@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Session
 
-from base_repository import BaseRepository
+from src.data.base_repository import BaseRepository
 from typing import List, Dict
 
-from models import Videos
+from src.data.models import Videos
 
 from sqlalchemy import select, update, delete
 

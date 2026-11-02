@@ -2,7 +2,7 @@ from typing import Optional
 from sqlalchemy import create_engine
 from sqlalchemy import URL
 from sqlalchemy.orm import sessionmaker, Session
-from models import Base
+from src.data.models import Base
 
 from contextlib import contextmanager
 from typing import Generator

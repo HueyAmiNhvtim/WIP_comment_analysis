@@ -1,10 +1,10 @@
 from sqlalchemy.orm import Session
 
-from base_repository import BaseRepository
+from src.data.base_repository import BaseRepository
 from typing import List, Dict
 from uuid import UUID as UUIDType
 
-from models import Users
+from src.data.models import Users
 
 from sqlalchemy import select, update, delete
 

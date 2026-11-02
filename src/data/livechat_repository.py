@@ -1,5 +1,5 @@
-from base_repository import BaseRepository
-from models import LiveComments
+from src.data.base_repository import BaseRepository
+from src.data.models import LiveComments
 from typing import List, Dict
 from uuid import UUID as UUIDType
 

@@ -1,5 +1,5 @@
-from base_repository import BaseRepository
-from models import Comments
+from src.data.base_repository import BaseRepository
+from src.data.models import Comments
 from typing import List, Dict
 from uuid import UUID as UUIDType
 
