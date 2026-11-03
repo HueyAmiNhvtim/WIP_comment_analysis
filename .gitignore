@@ -5,7 +5,7 @@ temp.txt
 *.json
 *.ods
 streamer_url_list
-.env
+.env*
 
 .idea/
 
@@ -15,3 +15,4 @@ streamer*/
 chat-downloader/
 chat_replay_downloader/
 fasttext_staticv/
+**/__pycache__
