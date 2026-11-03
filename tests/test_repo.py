@@ -1,5 +1,3 @@
-import pytest
-
 from src.data.user_repository import UserRepository
 from src.data.comment_repository import CommentRepository
 from src.data.livechat_repository import LivechatRepository
@@ -198,12 +196,32 @@ class TestVideoRepo:
         assert video_2.id == original_uuid
         assert video_2.view_count == 5200000
         assert video_2.comment_count == 120322
-        # Verify that only 1 video row exists in the database
+        # Verify that only 1 video record exists in the database
         all_videos = repo.get_by(platform_video_id="ytb_vid_004")
         assert len(all_videos) == 1
 
 class TestCommentRepo:
-    pass
+    def test_insert(self, session: Session):
+        pass
 
+    def test_update(self, session: Session):
+        pass
+    
+    def test_delete(self, session: Session):
+        pass
+    
+    def test_insert_extracted_batch(self, session: Session):
+        pass
+    
 class TestLiveChatRepo:
-    pass
+    def test_insert(self, session: Session):
+        pass
+
+    def test_update(self, session: Session):
+        pass
+    
+    def test_delete(self, session: Session):
+        pass
+    
+    def test_insert_extracted_batch(self, session: Session):
+        pass
