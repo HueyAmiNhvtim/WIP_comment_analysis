@@ -48,7 +48,7 @@ class VideoRepository(BaseRepository[Videos]):
         return result.rowcount
     
     def insert_or_update(self, video_data: Dict) -> Videos:
-        """Inserts a new video, or updates the columns if the videos already exists in the table.
+        """Inserts a new video, or updates the columns if the video already exists in the table.
         Useful for when you want to update the video later on.
         Returns:
             Videos: the saved Videos ORM object containing its video.id
@@ -56,14 +56,19 @@ class VideoRepository(BaseRepository[Videos]):
         # Kinda feels like this is gonna be the bottleneck...But I have to make this work first.
         # But...we index the video_ids so index-boosted search time is gonna alleviate the supposed bottleneck I think.
         existing = self.get_by(platform_video_id=video_data["platform_video_id"])
-        
+        print(existing)
         if existing:
             video = existing[0] # There can be like one unique instance for every video 
-            # Update the columns that can change over time. See base.py in the extractor and models.py for the type of columns
+            # Update the columns that can change over time. See base_extractor.py in the extractor and models.py for the type of columns
             # that are potentially mutable for videos
-            video.view_count = video_data.get(video_data["view_count"], video.view_count)
-            video.comment_count = video_data.get(video_data["comment_count"], video.comment_count)
-            # Change the thing, SQLAlchemy's dirty cchecking will automatically send the UPDATE equivalent upon flushing it.
+            # updated_values = {
+            #     "view_count": video_data.get(video_data["view_count"], video.view_count),
+            #     "comment_count": video_data.get(video_data["comment_count"], video.comment_count)
+            # }
+            # self.update(values=updated_values, conditions={"platform_video_id": video.platform_video_id})
+            video.view_count = video_data.get("view_count", video.view_count)
+            video.comment_count = video_data.get("comment_count", video.comment_count)
+            # Change the thing, SQLAlchemy's dirty checking will automatically send the UPDATE equivalent upon flushing it.
         else:
               # Create brand new video with all fields from extractor
             video = Videos(
