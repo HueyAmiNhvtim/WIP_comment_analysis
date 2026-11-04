@@ -80,7 +80,7 @@ class LiveComments(Base, UUIDMixin):
     text: Mapped[str] = mapped_column(Text, insert_default="")
     
     # Video - Comments: 1-many. User - comment: 1-many
-    user_id = mapped_column(ForeignKey("users.id"), nullable=True) # Same rationale as shown in Comments
+    user_id = mapped_column(ForeignKey("users.id")) # Same rationale as shown in Comments
     video_id = mapped_column(ForeignKey("videos.id"))
     
     # Relationships
