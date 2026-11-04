@@ -47,7 +47,6 @@ class TestUsersRepo:
         
         saved_user = repo.insert(user)
         session.flush()
-        session.commit()
         
         conditions = dict()
         conditions["platform_user_id"] = test_id
@@ -200,28 +199,311 @@ class TestVideoRepo:
         all_videos = repo.get_by(platform_video_id="ytb_vid_004")
         assert len(all_videos) == 1
 
+
 class TestCommentRepo:
     def test_insert(self, session: Session):
-        pass
+        """Test inserting a comment into the repository
+
+        Args:
+            session (Session): SQLAlchemy session that handles the Python's side of database operations"""
+        user_repo = UserRepository(session)
+        video_repo = VideoRepository(session)
+        comment_repo = CommentRepository(session)
+        
+        # Create parent User and Video first (to satisfy foreign keys)
+        # This should be alright since if user and video repos fail then their associating tests will fail too.
+        user = user_repo.insert(Users(platform_user_id="ytb_c324231"))
+        video = video_repo.insert(Videos(platform_video_id="ytb_23453", title="Raven spotted despite reported dead on Rubicon"))
+        session.flush()
+        
+        # Insert Comment
+        time = datetime.now(timezone.utc)
+        comment = Comments(
+            platform_comment_id="ytb_12301",
+            video_id=video.id,
+            user_id=user.id,
+            text="Ain't no way that dude's still alive. fake news, he got the handshake.",
+            published_at=time,
+        )
+        saved = comment_repo.insert(comment)
+        session.flush()
+        assert saved.id is not None  # UUIDv7 generated!
+        fetched = comment_repo.get_by(platform_comment_id="ytb_12301")
+        assert len(fetched) == 1
+        assert fetched[0].text == "Ain't no way that dude's still alive. fake news, he got the handshake."
+        assert fetched[0].video_id == video.id
+        assert fetched[0].user_id == user.id
+        assert fetched[0].published_at == time
 
     def test_update(self, session: Session):
-        pass
+        """Test updating comment text.
+        Args:
+            session (Session): SQLAlchemy session that handles the Python's side of database operations"""
+        user_repo = UserRepository(session)
+        video_repo = VideoRepository(session)
+        comment_repo = CommentRepository(session)
+        
+        user = user_repo.insert(Users(platform_user_id="ytb_user_sh22p"))
+        video = video_repo.insert(Videos(platform_video_id="ytb_vid_c2", title="Karaoke NIGHT!!!"))
+        session.flush()
+        comment_repo.insert(
+            Comments(
+                platform_comment_id="ytb_comm_2",
+                video_id=video.id,
+                user_id=user.id,
+                text="waru ku nai yo ne",
+            )
+        )
+        session.flush()
+        rows = comment_repo.update(
+            values={"text": "Edited text (\"typo\" fixed)"},
+            conditions={"platform_comment_id": "ytb_comm_2"},
+        )
+        session.flush()
+        assert rows == 1
+        updated = comment_repo.get_by(platform_comment_id="ytb_comm_2")[0]
+        assert updated.platform_comment_id == "ytb_comm_2"
+        assert updated.user_id == user.id
+        assert updated.video_id == video.id
+        assert updated.text == "Edited text (\"typo\" fixed)"
     
     def test_delete(self, session: Session):
-        pass
+        """Test deleting a comment by condition.
+        Args:
+            session (Session): SQLAlchemy session that handles the Python's side of database operations"""
+            
+        user_repo = UserRepository(session)
+        video_repo = VideoRepository(session)
+        comment_repo = CommentRepository(session)
+        user = user_repo.insert(Users(platform_user_id="ytb_user_c3"))
+        video = video_repo.insert(Videos(platform_video_id="ytb_vid_c3", title="Gaming Stream"))
+        session.flush()
+        comment_repo.insert(
+            Comments(
+                platform_comment_id="ytb_comm_003",
+                video_id=video.id,
+                user_id=user.id,
+                text="Spam comment to delete",
+            )
+        )
+        session.flush()
+        rows = comment_repo.delete(conditions={"platform_comment_id": "ytb_comm_003"})
+        session.flush()
+        assert rows == 1
+        assert len(comment_repo.get_by(platform_comment_id="ytb_comm_003")) == 0
     
     def test_insert_extracted_batch(self, session: Session):
-        pass
+        """Test pipeline batch insert and verifying deduplication on re-scrapes.
+        Args:
+            session (Session): SQLAlchemy session that handles the Python's side of database operations
+        """
+        user_repo = UserRepository(session)
+        video_repo = VideoRepository(session)
+        comment_repo = CommentRepository(session)
+        
+        # Setup parent video & user map
+        video = video_repo.insert(Videos(platform_video_id="ytb_vid_2321", title="MadCat too op pls nerf."))
+        session.flush()
+        user_map = user_repo.ensure_users_exist(["ytb_u_alpha", "ytb_u_beta"])
+        raw_comments_first_run = [
+            {
+                "platform_comment_id": "comm_1",
+                "platform_user_id": "ytb_u_alpha",
+                "text": "No, you spheroids are just salty our machines are better.",
+                "published_at": datetime.now(timezone.utc),
+            },
+            {
+                "platform_comment_id": "comm_2",
+                "platform_user_id": "ytb_u_beta",
+                "text": "Even with your Timmys you can't even defeat the phone company kekw.",
+                "published_at": datetime.now(timezone.utc),
+            },
+        ]
+        # First ingestion: Both should be inserted
+        inserted_first = comment_repo.insert_extracted_batch(
+            raw_comments=raw_comments_first_run,
+            video_id=video.id,
+            user_map=user_map,
+        )
+        session.flush()
+        assert len(inserted_first) == 2
+        # Second ingestion (Re-scrape scenario):
+        # Includes comm_1 (already in DB) + comm_3 (brand new!)
+        raw_comments_second_run = [
+            {
+                "platform_comment_id": "comm_1",  # Existing!
+                "platform_user_id": "ytb_u_alpha",
+                "text": "No, you spheroids are just salty our machines are better.",
+            },
+            {
+                "platform_comment_id": "comm_2",
+                "platform_user_id": "ytb_u_beta",
+                "text": "Even with your Timmys you can't even defeat the phone company kekw.",
+            },
+            {
+                "platform_comment_id": "comm_3",  # Brand new!
+                "platform_user_id": "ytb_u_alpha",
+                "text": "I challenge you to a trial of grievance.",
+                "published_at": datetime.now(timezone.utc),
+            },
+        ]
+        inserted_second = comment_repo.insert_extracted_batch(
+            raw_comments=raw_comments_second_run,
+            video_id=video.id,
+            user_map=user_map,
+        )
+        session.flush()
+        # Deduplication check: Check that ONLY the truly new comment was inserted!
+        assert len(inserted_second) == 1
+        assert inserted_second[0].platform_comment_id == "comm_3"
+        # Total in DB for this video should now be 3 (comm_1, comm_2, comm_3)
+        total_comments = comment_repo.get_by(video_id=video.id, n=-1)
+        assert len(total_comments) == 3
+
     
 class TestLiveChatRepo:
     def test_insert(self, session: Session):
-        pass
-
+        """Test inserting a live chat replay message.
+        Args:
+            session (Session): SQLAlchemy session that handles the Python's side of database operations
+        """
+        user_repo = UserRepository(session)
+        video_repo = VideoRepository(session)
+        livechat_repo = LivechatRepository(session)
+        
+        user = user_repo.insert(Users(platform_user_id="ytb_chatter_01"))
+        video = video_repo.insert(Videos(platform_video_id="ytb_stream_live", title="AC6 PvP Tournament", is_livestream=True))
+        session.flush()
+        time = datetime.now(timezone.utc)
+        chat_msg = LiveComments(
+            platform_comment_id="ytb_chat_msg_100",
+            video_id=video.id,
+            user_id=user.id,
+            text="CORAL ABIDE WITH RUBICON",
+            published_at=time,
+        )
+        
+        saved = livechat_repo.insert(chat_msg)
+        session.flush()
+        assert saved.id is not None
+        fetched = livechat_repo.get_by(platform_comment_id="ytb_chat_msg_100")
+        assert len(fetched) == 1
+        assert fetched[0].text == "CORAL ABIDE WITH RUBICON"
+        assert fetched[0].video_id == video.id
+        assert fetched[0].user_id == user.id
+        assert fetched[0].published_at == time
+        
     def test_update(self, session: Session):
-        pass
-    
+        """Test updating live chat message text.
+        Args:
+            session (Session): SQLAlchemy session that handles the Python's side of database operations
+        """
+        user_repo = UserRepository(session)
+        video_repo = VideoRepository(session)
+        livechat_repo = LivechatRepository(session)
+        user = user_repo.insert(Users(platform_user_id="ytb_chatter_02"))
+        video = video_repo.insert(Videos(platform_video_id="ytb_stream_live_2", title="Midnight Karaoke"))
+        session.flush()
+        livechat_repo.insert(
+            LiveComments(
+                platform_comment_id="ytb_chat_msg_200",
+                video_id=video.id,
+                user_id=user.id,
+                text="Totally Original chat message that comments about the singer's ability in a flattering way.",
+            )
+        )
+        session.flush()
+        rows = livechat_repo.update(
+            values={"text": "Updated chat message that comments about the singer's ability in a semi-flattering way"},
+            conditions={"platform_comment_id": "ytb_chat_msg_200"},
+        )
+        session.flush()
+        assert rows == 1
+        updated = livechat_repo.get_by(platform_comment_id="ytb_chat_msg_200")[0]
+        assert updated.platform_comment_id == "ytb_chat_msg_200"
+        assert updated.user_id == user.id
+        assert updated.video_id == video.id
+        assert updated.text == "Updated chat message that comments about the singer's ability in a semi-flattering way"
+        
     def test_delete(self, session: Session):
-        pass
-    
+        """Test deleting a live chat message.
+        Args:
+            session (Session): SQLAlchemy session that handles the Python's side of database operations
+        """
+        user_repo = UserRepository(session)
+        video_repo = VideoRepository(session)
+        livechat_repo = LivechatRepository(session)
+        user = user_repo.insert(Users(platform_user_id="ytb_chatter_03"))
+        video = video_repo.insert(Videos(platform_video_id="ytb_stream_live_3", title="Stream with spam"))
+        session.flush()
+        livechat_repo.insert(
+            LiveComments(
+                platform_comment_id="ytb_chat_msg_300",
+                video_id=video.id,
+                user_id=user.id,
+                text="Deleted by moderator",
+            )
+        )
+        session.flush()
+        rows = livechat_repo.delete(conditions={"platform_comment_id": "ytb_chat_msg_300"})
+        session.flush()
+        assert rows == 1
+        assert len(livechat_repo.get_by(platform_comment_id="ytb_chat_msg_300")) == 0
+        
     def test_insert_extracted_batch(self, session: Session):
-        pass
+        """Test batch insertion and deduplication for high-volume live chat messages.
+        Args:
+            session (Session): SQLAlchemy session that handles the Python's side of database operations
+        """
+        user_repo = UserRepository(session)
+        video_repo = VideoRepository(session)
+        livechat_repo = LivechatRepository(session)
+        video = video_repo.insert(Videos(platform_video_id="ytb_stream_batch", title="Grand Finals", is_livestream=True))
+        session.flush()
+        user_map = user_repo.ensure_users_exist(["ytb_fan_1", "ytb_fan_2"])
+        raw_chat_first = [
+            {
+                "platform_comment_id": "chat_001",
+                "platform_user_id": "ytb_fan_1",
+                "text": "UTTERLY MOIST",
+                "published_at": datetime.now(timezone.utc),
+            },
+            {
+                "platform_comment_id": "chat_002",
+                "platform_user_id": "ytb_fan_2",
+                "text": "CLUTCH GOD",
+                "published_at": datetime.now(timezone.utc),
+            },
+        ]
+        inserted_first = livechat_repo.insert_extracted_batch(
+            raw_comments=raw_chat_first,
+            video_id=video.id,
+            user_map=user_map,
+        )
+        session.flush()
+        assert len(inserted_first) == 2
+        # Second scrape: includes chat_002 (existing) + chat_003 (new message)
+        raw_chat_second = [
+            {
+                "platform_comment_id": "chat_002",
+                "platform_user_id": "ytb_fan_2",
+                "text": "CLUTCH GOD",
+            },
+            {
+                "platform_comment_id": "chat_003",
+                "platform_user_id": "ytb_fan_1",
+                "text": "GG WP",
+                "published_at": datetime.now(timezone.utc),
+            },
+        ]
+        inserted_second = livechat_repo.insert_extracted_batch(
+            raw_comments=raw_chat_second,
+            video_id=video.id,
+            user_map=user_map,
+        )
+        session.flush()
+        # Deduplication check: ONLY chat_003 inserted!
+        assert len(inserted_second) == 1
+        assert inserted_second[0].platform_comment_id == "chat_003"
+        total_chats = livechat_repo.get_by(video_id=video.id, n=-1)
+        assert len(total_chats) == 3
