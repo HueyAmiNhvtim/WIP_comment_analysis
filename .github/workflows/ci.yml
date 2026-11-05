@@ -8,7 +8,7 @@ on: # where to trigger
 
 jobs: # What to do once the conditions are fulfilled?
     test: # Run them tests
-        name: Test Repositories # Subject to change once more stuff is added
+        name: Test # Subject to change once more stuff is added
         runs-on: ubuntu-latest
         # Tbh, I just want to learn different aspects of github actions, in reality, I think just a single 18 is enough, or whatever the latest version of postgre is .
         strategy:
