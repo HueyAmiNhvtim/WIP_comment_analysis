@@ -28,11 +28,15 @@ jobs: # What to do once the conditions are fulfilled?
                     - 5433:5432
                 # Wait until PostgreSQL is actually ready to receive queries before continuing
                 # Allows you to write long command broken down into multiple lines
+                # health-cmd pg_isready     Ping postgres to check if the thing is actually running
+                # health-interval 10s       Ping health status every 10s
+                # health-timeout 5s         If health status fails to respond after 5s, it is considered a failure
+                # health-retries 5          Try pinging health status 5 times in total. If all fail, stop the thing.
                 options: >- 
-                    --health-cmd pg_isready # Ping postgres to check if the thing is actually running
-                    --health-interval 10s   # Ping health status every 10s
-                    --health-timeout 5s     # If health status fails to respond after 5s, it is considered a failure
-                    --health-retries 5      # Try pinging health status 5 times in total. If all fail, stop the thing.
+                    --health-cmd pg_isready 
+                    --health-interval 10s   
+                    --health-timeout 5s      
+                    --health-retries 5      
         steps:
             # Checkout repo code
             - name: Checking out repository
