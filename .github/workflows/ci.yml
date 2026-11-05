@@ -14,7 +14,7 @@ jobs: # What to do once the conditions are fulfilled?
         strategy:
             matrix:
                 postgresql_version: [16, 17, 18]
-                python_version: ["3.12", "3.13", "3.14"]
+                python_version: ["3.14"]  # Nevermind, Python 3.14 is the python version that introduced UUID7, so uhh. yeah.
 
         # Starts an isolated PostgreSQL service Docker container in the cloud (or Microsoft Cloud - Azure)
         services:

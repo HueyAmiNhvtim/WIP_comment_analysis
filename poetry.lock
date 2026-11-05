@@ -657,10 +657,7 @@ files = [
 ]
 
 [package.dependencies]
-cryptography = [
-    {version = ">=38.0.3", markers = "python_version < \"3.14\""},
-    {version = ">=41.0.5", markers = "python_version >= \"3.14\""},
-]
+cryptography = {version = ">=41.0.5", markers = "python_version >= \"3.14\""}
 pyasn1-modules = ">=0.2.1"
 
 [package.extras]
@@ -828,7 +825,6 @@ httpcore2 = {version = "2.16.0", markers = "sys_platform != \"emscripten\""}
 httpx2-jsfetch = {version = "*", markers = "sys_platform == \"emscripten\" and python_version >= \"3.12\""}
 idna = ">=3.18"
 truststore = {version = ">=0.10", markers = "sys_platform != \"emscripten\""}
-typing-extensions = {version = ">=4.5.0", markers = "python_version < \"3.13\""}
 
 [package.extras]
 brotli = ["brotli (>=1.2.0) ; platform_python_implementation == \"CPython\"", "brotlicffi (>=1.2.0.2) ; platform_python_implementation != \"CPython\""]
@@ -1288,7 +1284,6 @@ files = [
 ]
 
 [package.dependencies]
-typing-extensions = {version = ">=4.6", markers = "python_version < \"3.13\""}
 tzdata = {version = "*", markers = "sys_platform == \"win32\""}
 
 [package.extras]
@@ -1826,5 +1821,5 @@ test = ["pytest", "websockets"]
 
 [metadata]
 lock-version = "2.1"
-python-versions = ">=3.12,<4.0"
-content-hash = "70331000a9139ee611cd96646664dddb93f987a8cd77c411633cfe6220c5b52b"
+python-versions = ">=3.14,<4.0"
+content-hash = "46b8f2c9ef205e2ffb4f053763380e4e0ada62394c4e217bd2a6e05c4a58fc4c"
