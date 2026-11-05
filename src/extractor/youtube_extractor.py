@@ -3,7 +3,7 @@
 from googleapiclient.errors import HttpError
 from chat_downloader import ChatDownloader
 from chat_downloader.errors import ChatGeneratorError, InvalidURL
-from base import BaseExtractor
+from src.extractor.base_extractor import BaseExtractor
 from typing import List
 
 import html

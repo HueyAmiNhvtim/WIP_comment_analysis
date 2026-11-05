@@ -1,44 +1,36 @@
-[tool.poetry]
-name = "wacky_wahoo" # Name and description subject to change
+[project]
+name = "comment-analysis"
 version = "0.1.0"
-description = "wacky wahoo project"
-authors = ["Your Name <dshk127mm@gmail.com>"]
+description = "Data Analysis that somehow doubles as data engineering?"
+authors = [
+    {name = "Huy Nguyen",email = "dshk127mm@gmail.com"}
+]
+license = "GPLv3"
 readme = "README.md"
+requires-python = ">=3.14,<4.0"
+dependencies = [
+    "sqlalchemy (>=2.1.6,<3.0.0)",
+    "numpy (>=2.5.4,<3.0.0)",
+    "staticvectors (>=0.2.0,<0.3.0)",
+    "google (>=3.0.0,<4.0.0)",
+    "alembic (>=1.20.1,<2.0.0)",
+    "requests (>=2.34.2,<3.0.0)",
+    "psycopg (>=3.3.6,<4.0.0)",
+    "python-dotenv (>=1.2.4,<2.0.0)",
+    "google-api-python-client (>=2.201.0,<3.0.0)",
+    "google-auth-oauthlib (>=1.5.0,<2.0.0)",
+    "chat-downloader @ git+https://github.com/Indigo128/chat-downloader.git"
+]
 
-[tool.poetry.dependencies]
-python = "^3.8"
-# Extractor dependencies
-google-api-python-client = "^2.92.0"
-
-# The forked chat-downloader from your README
-chat-downloader = {git = "https://github.com/Indigo128/chat-downloader.git"}
-
-# Analysis dependencies
-staticvectors = "^0.0.3"
-regex = "^2023.8.8"
-
-# General utilities
-tqdm = "^4.65.0"
-
-# Database dependencies (from your TODOs)
-sqlalchemy = {extras = ["asyncio"], version = "^2.0.20"}
-alembic = "^1.11.2"
-asyncpg = "^0.28.0" # For async postgresql connection with sqlalchemy
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^7.4.0"
-black = "^23.7.0"
-ruff = "^0.0.286"
-mypy = "^1.5.1"
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.ruff]
-line-length = 88
-select = ["E", "F", "W", "I", "UP"]
+[dependency-groups]
+dev = [
+    "pytest (>=9.2.0,<10.0.0)"
+]
 
-[tool.black]
-line-length = 88
-target-version = ['py38']
+[tool.poetry]
+package-mode = false

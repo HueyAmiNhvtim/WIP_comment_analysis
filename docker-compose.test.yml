@@ -1,0 +1,13 @@
+services:
+  db:
+    image: postgres:latest
+    container_name: vchuuba_postgres_test
+    env_file: ".env.test"
+    environment:
+      POSTGRES_DB: ${DB_NAME:-vchuuba_testing}
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PW:-postgres}
+    ports:
+      - "5433:5432/tcp"  # Postgres incoming port is 5432. For testing, we use 5433 instead to avoid conflict with that default port.
+    tmpfs: # Store data temporarily and only in the host memory. When container stops, the mount is removed, and  files written there are gone.
+      - /var/lib/postgresql/ # For postgres 18+ You shouldn't include data entry there. Otherwise, the image will crash.

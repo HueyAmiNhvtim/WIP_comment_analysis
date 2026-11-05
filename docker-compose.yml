@@ -1,0 +1,21 @@
+name: dust-and-dusk
+
+services:
+    db:
+        image: postgres:latest
+        container_name: vchuuba_postgres
+        restart: unless-stopped     # Do not restart the container if it is stopped manually. Otherwise, always restart.
+        env_file: ".env"            # Just load the .env file, easier to change that way
+        environment:
+            POSTGRES_DB: ${DB_NAME:-vchuuba_testing}
+            POSTGRES_USER: ${DB_USERNAME:-postgres}
+            POSTGRES_PASSWORD: ${DB_PW:-postgres}
+        ports:
+            - "5432:5432/tcp"
+        volumes:
+            - dev_data:/var/lib/postgresql/
+
+volumes:
+    dev_data:
+
+

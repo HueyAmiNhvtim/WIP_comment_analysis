@@ -1,0 +1,74 @@
+name: Continuous Integration Pipeline
+
+on: # where to trigger
+    push:
+        branches: [ main ]
+    pull_request:
+        branches: [ main ]
+
+jobs: # What to do once the conditions are fulfilled?
+    test: # Run them tests
+        name: Test # Subject to change once more stuff is added
+        runs-on: ubuntu-latest
+        # Tbh, I just want to learn different aspects of github actions, in reality, I think just a single 18 is enough, or whatever the latest version of postgre is .
+        strategy:
+            matrix:
+                postgresql_version: [16, 17, 18]
+                python_version: ["3.14"]  # Nevermind, Python 3.14 is the python version that introduced UUID7, so uhh. yeah.
+
+        # Starts an isolated PostgreSQL service Docker container in the cloud (or Microsoft Cloud - Azure)
+        services:
+            postgres:
+                image: postgres:${{ matrix.postgresql_version }}
+                env: 
+                    POSTGRES_DB: ci_testing_db
+                    POSTGRES_USER: postgres
+                    POSTGRES_PASSWORD: postgres
+                ports:
+                    - 5433:5432
+                # Wait until PostgreSQL is actually ready to receive queries before continuing
+                # Allows you to write long command broken down into multiple lines
+                # health-cmd pg_isready     Ping postgres to check if the thing is actually running
+                # health-interval 10s       Ping health status every 10s
+                # health-timeout 5s         If health status fails to respond after 5s, it is considered a failure
+                # health-retries 5          Try pinging health status 5 times in total. If all fail, stop the thing.
+                options: >- 
+                    --health-cmd pg_isready 
+                    --health-interval 10s   
+                    --health-timeout 5s      
+                    --health-retries 5      
+        steps:
+            # Checkout repo code
+            - name: Checking out repository
+              uses: actions/checkout@v7
+            
+            # Set up Python
+            - name: Setting up Python
+              uses: actions/setup-python@v7
+              with:
+                python-version: ${{ matrix.python_version }}
+            
+            # Install Poetry
+            - name: Install Poetry
+              run: |
+                pipx install poetry # Install the thing as like a software, not as a library you can use in your python project.
+            
+            # Install Python dependencies using Poetry and poetry.lock for exact version replication
+            - name: Install dependencies
+              run: |
+                poetry install --no-interaction
+            
+            # Generate .env.test for the CI runner on the fly
+            - name: Configuring test environment
+              run: |
+                echo "DB_USERNAME=postgres" > .env.test
+                echo "DB_PW=postgres" >> .env.test
+                echo "DB_HOST=localhost" >> .env.test
+                echo "DB_PORT=5433" >> .env.test
+                echo "DB_NAME=ci_testing_db" >> .env.test
+            
+            - name: Run Pytest
+              run: |
+                poetry run pytest tests/ -v
+
+
