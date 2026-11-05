@@ -7,8 +7,8 @@ on: # where to trigger
         branches: [ main ]
 
 jobs: # What to do once the conditions are fulfilled?
-    test: # Run them tests
-        name: Test # Subject to change once more stuff is added
+    test-repo: # Run them tests
+        name: Test (${{ matrix.postgresql_version }}, ${{ matrix.python_version }}) # Subject to change once more stuff is added
         runs-on: ubuntu-latest
         # Tbh, I just want to learn different aspects of github actions, in reality, I think just a single 18 is enough, or whatever the latest version of postgre is .
         strategy:
@@ -70,5 +70,16 @@ jobs: # What to do once the conditions are fulfilled?
             - name: Run Pytest
               run: |
                 poetry run pytest tests/ -v
+
+    # Single non-matrix job that satisfies the Branch Protection check
+    # Will only satisfy if all tests it needs passed.
+    test:
+        name: Test
+        needs: 
+            - test-repo
+        runs-on: ubuntu-latest
+        steps:
+            - name: Matrix checks passed
+              run: echo "All matrix tests passed successfully!"
 
 
