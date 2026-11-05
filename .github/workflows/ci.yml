@@ -27,7 +27,8 @@ jobs: # What to do once the conditions are fulfilled?
                 ports:
                     - 5433:5432
                 # Wait until PostgreSQL is actually ready to receive queries before continuing
-                options: >- # Allows you to write long command broken down into multiple lines
+                # Allows you to write long command broken down into multiple lines
+                options: >- 
                     --health-cmd pg_isready # Ping postgres to check if the thing is actually running
                     --health-interval 10s   # Ping health status every 10s
                     --health-timeout 5s     # If health status fails to respond after 5s, it is considered a failure
