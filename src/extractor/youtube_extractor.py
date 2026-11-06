@@ -205,7 +205,7 @@ class YoutubeExtractor(BaseExtractor):
             #       to follow the same data format as it is specified in base.py in case they decided to do so.
             #       Even though there is potentially a way to find collaborators channelID, it is not 100% reliable as creators
             #       can just not put the collaborator names and/or handles in both title and description.
-            result["platform_owner_ids"] = [snippet["channelId"]] 
+            result["platform_owner_ids"] = [f"ytb_{snippet["channelId"]}"] 
             return result
         except HttpError as err:
             print(err)
