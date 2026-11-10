@@ -3,6 +3,20 @@
 
 import pytest
 from src.data.database_manager import DatabaseManager
+from unittest.mock import MagicMock, patch
+
+from src.extractor.youtube_extractor import YoutubeExtractor
+
+@pytest.fixture
+def mock_youtube_client():
+    """Provides a fresh MagicMock pretending to be the Google YouTube API client."""
+    return MagicMock()
+
+
+@pytest.fixture
+def ytb_extractor(mock_youtube_client):
+    """Provides a YoutubeExtractor injected with the mocked client."""
+    return YoutubeExtractor(youtube_client=mock_youtube_client)
 
 
 @pytest.fixture
