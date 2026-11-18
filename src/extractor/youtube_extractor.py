@@ -7,7 +7,7 @@ from src.extractor.base_extractor import BaseExtractor
 from typing import List
 
 import html
-from datetime import datetime
+from datetime import datetime, timezone
 
 # DATA FORMAT THAT IS SUPPOSEDLY RETURNED BY THIS EXTRACTOR IS SPECIFIED IN extractor/base.py
 # TODO: Modify this extractor to follow the data format specified in base.py
@@ -158,7 +158,7 @@ class YoutubeExtractor(BaseExtractor):
             for message in chat: # ignore the error, the chat_retrieved guarantees that if chat generator can't be retrieved, it will block the code from going into this part
                 message_dict = dict()
                 message_dict["platform_comment_id"] = f"ytb_{message["message_id"]}"
-                message_dict["published_at"] = datetime.fromtimestamp(message["timestamp"]/1e6) # The chat library returns timestamp in MICROSECONDS, and python's fromtimestamp only deals with timestamp in SECONDS
+                message_dict["published_at"] = datetime.fromtimestamp(message["timestamp"]/1e6, tz=timezone.utc) # The chat library returns timestamp in MICROSECONDS, and python's fromtimestamp only deals with timestamp in SECONDS
                 message_dict["text"] = html.unescape(message["message"])
                 message_dict["platform_user_id"] = f"ytb_{message["author"]["id"]}"
                 result.append(message_dict)
