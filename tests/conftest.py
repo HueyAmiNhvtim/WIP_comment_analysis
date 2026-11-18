@@ -19,6 +19,10 @@ def ytb_extractor(mock_youtube_client):
     return YoutubeExtractor(youtube_client=mock_youtube_client)
 
 
+# Weird (I suppose not weird to more knowledgeable people than me) thing, pytest uses
+# dependency injection via matching the exact parameter name in the test signature to the @pytest.fixture 
+# function name. I suppose I could only understand it once I read the source code of pytest that did that thing (I know
+# pytest doc mentions that behaviour in the fixture section)
 @pytest.fixture(scope="session")
 def db_manager():
     """
