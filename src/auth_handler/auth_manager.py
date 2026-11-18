@@ -11,16 +11,16 @@ from googleapiclient.errors import HttpError
 
 class AuthManager:
     """Centralized Authentication Manager for all platforms."""
-    def __init__(self):
+    def __init__(self, env_path = ".env"):
         self.youtube_client = None
         self.twitch_client = None
         
-        self.__read_env()
+        self.__read_env(env_path)
         self.authenticate_all()
     
-    def __read_env(self):
+    def __read_env(self, env_path):
         """Read and initialize the environment variables"""
-        load_dotenv()  # Ensures variables from your .env file are loaded into os.environ
+        load_dotenv(dotenv_path=env_path, override=True)  # Ensures variables from your .env file are loaded into os.environ
         self.ytb_name = os.getenv("YTB_API_SERVICE_NAME", default="youtube")
         self.ytb_version = os.getenv("YTB_API_VERSION", default="v3")
         self.ytb_scopes = os.getenv("YTB_API_SCOPES", default="").split(",")
@@ -51,7 +51,7 @@ class AuthManager:
             flow = InstalledAppFlow.from_client_secrets_file(
                 self.ytb_creds_fp, self.ytb_scopes
             )
-            creds = flow.run_local_server(port=0) # May subject to change once we put the whole thing to run within
+            creds = flow.run_local_server(port=0) # TODO: May subject to change once we put the whole thing to run within
                                                   # the Docker thingie.
         # Save the credentials for the next run
         with open(self.ytb_token_fp, "w") as token:

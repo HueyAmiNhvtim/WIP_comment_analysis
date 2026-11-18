@@ -6,6 +6,8 @@ from chat_downloader.errors import ChatGeneratorError, InvalidURL
 from src.extractor.base_extractor import BaseExtractor
 from typing import List
 
+from tqdm import tqdm # Track comment and livechat extraction process. TODO: Probably gonna be changed once we have sth like pagination???
+
 import html
 from datetime import datetime, timezone
 
@@ -32,26 +34,28 @@ class YoutubeExtractor(BaseExtractor):
                 textFormat="html",
                 videoId=video_id
             )
-
-            while True:
-                thread_response = thread_request.execute()
-                
-                for comment_thread in thread_response.get("items", []):
-                    result += self.__extract_comment_thread(comment_thread)
+            with tqdm(desc=f"Comments ({video_id})", unit=" comment(s)") as comment_pbar:
+                while True:
+                    thread_response = thread_request.execute()
                     
-                next_page_token = thread_response.get("nextPageToken", False)
-                # Quit if no more comments in the comment section to extract.
-                if not next_page_token:
-                    break
-                
-                thread_request = self.youtube_client.commentThreads().list(
-                    part="snippet,replies",
-                    maxResults=100,
-                    moderationStatus="published",
-                    textFormat="html",
-                    videoId=video_id, 
-                    pageToken=next_page_token,
-                )
+                    for comment_thread in thread_response.get("items", []):
+                        extracted_comments = self.__extract_comment_thread(comment_thread)
+                        result += extracted_comments
+                        comment_pbar.update(len(extracted_comments))
+                        
+                    next_page_token = thread_response.get("nextPageToken", False)
+                    # Quit if no more comments in the comment section to extract.
+                    if not next_page_token:
+                        break
+                    
+                    thread_request = self.youtube_client.commentThreads().list(
+                        part="snippet,replies",
+                        maxResults=100,
+                        moderationStatus="published",
+                        textFormat="html",
+                        videoId=video_id, 
+                        pageToken=next_page_token,
+                    )
         except HttpError as err:
             print(err) # TODO: May do more in the future
         return result
@@ -155,7 +159,7 @@ class YoutubeExtractor(BaseExtractor):
                 print(f"Invalid url: {url}.\nError: {err}")
             
         if chat_retrieved:
-            for message in chat: # ignore the error, the chat_retrieved guarantees that if chat generator can't be retrieved, it will block the code from going into this part
+            for message in tqdm(chat, desc=f"Livechat ({video_id})", unit=" msg(s)"): # ignore the error, the chat_retrieved guarantees that if chat generator can't be retrieved, it will block the code from going into this part
                 message_dict = dict()
                 message_dict["platform_comment_id"] = f"ytb_{message["message_id"]}"
                 message_dict["published_at"] = datetime.fromtimestamp(message["timestamp"]/1e6, tz=timezone.utc) # The chat library returns timestamp in MICROSECONDS, and python's fromtimestamp only deals with timestamp in SECONDS
@@ -201,7 +205,7 @@ class YoutubeExtractor(BaseExtractor):
             # TODO: Gonna require some refactoring to avoid code organization looking messy.
             # Like, one method needing the result from another's response...
             result["is_livestream"] = "liveStreamingDetails" in video_data
-            # NOTE: Youtube API (as of the time of writing of Oct 2026) does not have a way to see other collaborators' channelId in a collab video. I'm going 
+            # NOTE: Youtube API (as of the time of writing of Nov 2026) does not have a way to see other collaborators' channelId in a collab video. I'm going 
             #       to follow the same data format as it is specified in base.py in case they decided to do so.
             #       Even though there is potentially a way to find collaborators channelID, it is not 100% reliable as creators
             #       can just not put the collaborator names and/or handles in both title and description.

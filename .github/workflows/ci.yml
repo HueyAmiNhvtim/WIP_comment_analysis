@@ -51,7 +51,7 @@ jobs: # What to do once the conditions are fulfilled?
             # Install Poetry
             - name: Install Poetry
               run: |
-                pipx install poetry # Install the thing as like a software, not as a library you can use in your python project.
+                pipx install poetry # Install the thing as like a software binary, not as a library you can use in your python project.
             
             # Install Python dependencies using Poetry and poetry.lock for exact version replication
             - name: Install dependencies

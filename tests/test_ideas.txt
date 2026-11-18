@@ -11,7 +11,8 @@ Extractors in general:
     Test for data format returned by Youtube Extractors (and future extractors if we come to that) to make sure it agreed upon the design
 
 Database:
-    Test for connection
-    Test dummy Database
-    Test insert, update, delete, create? (Tho that's for the repo test)
+    Test for connection. Done.
+    Test dummy Database. Done.
+    Test insert, update, delete, create? Also Done.
+    Test youtube extractor. Done, too, woa.
         

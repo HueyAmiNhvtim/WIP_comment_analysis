@@ -19,7 +19,8 @@ dependencies = [
     "python-dotenv (>=1.2.4,<2.0.0)",
     "google-api-python-client (>=2.201.0,<3.0.0)",
     "google-auth-oauthlib (>=1.5.0,<2.0.0)",
-    "chat-downloader @ git+https://github.com/Indigo128/chat-downloader.git"
+    "chat-downloader @ git+https://github.com/Indigo128/chat-downloader.git",
+    "tqdm (>=4.70.1,<5.0.0)"
 ]
 
 

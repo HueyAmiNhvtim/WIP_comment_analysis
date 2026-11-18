@@ -26,7 +26,7 @@ class DatabaseManager:
         :param env_path: The path to the desired .env file
         :param echo: whether to log the sql queries...Maybe I should create a separate Python logger for the entire thing.
         """
-        load_dotenv(dotenv_path=env_path)
+        load_dotenv(dotenv_path=env_path, override=True)
         connection_url = URL.create(
             drivername="postgresql+psycopg",
             username=f"{os.getenv('DB_USERNAME')}",
