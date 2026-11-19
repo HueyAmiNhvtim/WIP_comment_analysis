@@ -168,12 +168,14 @@ class TestVideoRepo:
             session (Session): SQLAlchemy session that handles the Python's side of database operations
         """
         repo = VideoRepository(session=session)
+        
         initial_data = {
             "platform_video_id": "ytb_vid_004",
             "title": "Sanguinius is back?!? NOT FAKE, TOTALLY REAL",
             "view_count": 4200000,
             "comment_count": 112322,
             "is_livestream": True,
+            "platform_owner_ids": ["ytb_lemartes_42"]
         }
         # Create the video
         video_1 = repo.insert_or_update(initial_data)
@@ -182,7 +184,10 @@ class TestVideoRepo:
         assert video_1.view_count == 4200000
         assert video_1.comment_count == 112322
         assert video_1.is_livestream is True
-        
+        # Verify that the user also appears in the users table
+        assert len(video_1.users) == 1
+        assert video_1.users[0].platform_user_id == "ytb_lemartes_42"
+                
         original_uuid = video_1.id
         # Re-scraping the same video with updated view counts
         updated_data = {
@@ -198,6 +203,9 @@ class TestVideoRepo:
         # Verify that only 1 video record exists in the database
         all_videos = repo.get_by(platform_video_id="ytb_vid_004")
         assert len(all_videos) == 1
+        # Verify that the user is unchanged
+        assert len(video_2.users) == 1
+        assert video_2.users[0].platform_user_id == "ytb_lemartes_42"
 
 
 class TestCommentRepo:

@@ -80,6 +80,8 @@ class VideoRepository(BaseRepository[Videos]):
                 is_livestream=video_data.get("is_livestream", False)
             )
             self.insert(video)
+            
+            # Add the users too, to maintain the many-to-many relationships between them.
             owner_ids = video_data.get("platform_owner_ids", [])
             if owner_ids:
                 stmt = select(Users).where(Users.platform_user_id.in_(owner_ids))
