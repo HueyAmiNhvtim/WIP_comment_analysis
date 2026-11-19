@@ -1,6 +1,6 @@
 1. Add logger class to allow monitoring.
 2. Do the ingestion pipeline thing.
-3. Improve efficiency of the extractor.
+3. Improve efficiency of the extractor, may involve digging into the livechat extractor itself.
 4. Analyze stuff? Get some ideas.
 5. Visualize the result? Use plotly or sth?
 6. Maybe put in Airflow and uhh, Spark? for learning purposes.
