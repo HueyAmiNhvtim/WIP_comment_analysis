@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from src.data.base_repository import BaseRepository
 from typing import List, Dict
 
-from src.data.models import Videos
+from src.data.models import Videos, Users
 
 from sqlalchemy import select, update, delete
 
@@ -49,14 +49,13 @@ class VideoRepository(BaseRepository[Videos]):
     
     def insert_or_update(self, video_data: Dict) -> Videos:
         """Inserts a new video, or updates the columns if the video already exists in the table.
-        Useful for when you want to update the video later on.
+        Useful for when you want to update the video's stats later on.
         Returns:
             Videos: the saved Videos ORM object containing its video.id
         """
         # Kinda feels like this is gonna be the bottleneck...But I have to make this work first.
         # But...we index the video_ids so index-boosted search time is gonna alleviate the supposed bottleneck I think.
         existing = self.get_by(platform_video_id=video_data["platform_video_id"])
-        print(existing)
         if existing:
             video = existing[0] # There can be like one unique instance for every video 
             # Update the columns that can change over time. See base_extractor.py in the extractor and models.py for the type of columns
@@ -71,6 +70,7 @@ class VideoRepository(BaseRepository[Videos]):
             # Change the thing, SQLAlchemy's dirty checking will automatically send the UPDATE equivalent upon flushing it.
         else:
               # Create brand new video with all fields from extractor
+              # Also insert the associating users if they have already not appeared in the Users table.
             video = Videos(
                 platform_video_id=video_data["platform_video_id"],
                 title=video_data["title"],
@@ -80,6 +80,14 @@ class VideoRepository(BaseRepository[Videos]):
                 is_livestream=video_data.get("is_livestream", False)
             )
             self.insert(video)
+            owner_ids = video_data.get("platform_owner_ids", [])
+            if owner_ids:
+                stmt = select(Users).where(Users.platform_user_id.in_(owner_ids))
+                owners = list(self.session.scalars(stmt).all())
+                for owner in owners:
+                    if owner not in video.users:
+                        video.users.append(owner)
         
-        self.session.flush() # Move changes from Python to the database's transactional offer
+        # owner_platform_ids = video_data.get("platform_owner_ids", [])
+        self.session.flush() # Move changes from Python to the database's transactional layer
         return video
