@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Set
 
 # TODO: Ok, we have to agree upon the data returned by the extractors...so that we could know how to properly insert stuff
 # DATA FORMAT RETURNED BY the extractors, CHANGE IF YOU'RE GONNA MODIFY THE EXTRACTORS:
@@ -29,7 +29,7 @@ from typing import List
 #       platform_user_id:
 #   }, {more_dictionary}],
 #   'users': {
-#       platform_user_id: []
+#       platform_user_id: set()
 #   }
 # }
 
@@ -56,7 +56,7 @@ class BaseExtractor(ABC):
     # Rationale for NOT making this abstract:
     # Because we have the defined dataset format, that means extract_users can just use the data format returned by the 
     # other extract_comments stuff and pulled them all.
-    def extract_users(self, video: dict, livechats: List[dict], comments: List[dict]):
+    def extract_users(self, video: dict, livechats: List[dict], comments: List[dict]) -> Set[str]:
         """Extract users id from the videos (owner(s)), livechats (commenter), and comments (commenter)
         """
         user_ids = set() # Don't want duplicate user_ids (ex: uploader of a video can argue with other commenters under the video's comment section)
@@ -72,7 +72,7 @@ class BaseExtractor(ABC):
             if livechat.get("platform_user_id", False):
                 user_ids.add(livechat["platform_user_id"])
 
-        return list(user_ids)
+        return user_ids
     
     # There is still the users thing, tho I think it is the responsibility of the extractors to output that
     def extract_everything(self, video_id: str) -> dict:
