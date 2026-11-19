@@ -69,8 +69,8 @@ class VideoRepository(BaseRepository[Videos]):
             video.comment_count = video_data.get("comment_count", video.comment_count)
             # Change the thing, SQLAlchemy's dirty checking will automatically send the UPDATE equivalent upon flushing it.
         else:
-              # Create brand new video with all fields from extractor
-              # Also insert the associating users if they have already not appeared in the Users table.
+            # Create brand new video with all fields from extractor
+            # Also insert the associating users if they have already not appeared in the Users table.
             video = Videos(
                 platform_video_id=video_data["platform_video_id"],
                 title=video_data["title"],
@@ -79,16 +79,19 @@ class VideoRepository(BaseRepository[Videos]):
                 comment_count=video_data.get("comment_count"),
                 is_livestream=video_data.get("is_livestream", False)
             )
-            self.insert(video)
             
-            # Add the users too, to maintain the many-to-many relationships between them.
-            owner_ids = video_data.get("platform_owner_ids", [])
-            if owner_ids:
-                stmt = select(Users).where(Users.platform_user_id.in_(owner_ids))
-                owners = list(self.session.scalars(stmt).all())
-                for owner in owners:
-                    if owner not in video.users:
-                        video.users.append(owner)
+        # Add the users too, to maintain the many-to-many relationships between them.
+        owner_ids = set(video_data.get("platform_owner_ids", []))
+        if owner_ids:
+            stmt = select(Users).where(Users.platform_user_id.in_(owner_ids))
+            existing_owners = {u.platform_user_id: u for u in self.session.scalars(stmt).all()}
+            for owner_id in owner_ids:
+                # Reuse existing Users row if present, otherwise instantiate a new one
+                owner = existing_owners.get(owner_id) or Users(platform_user_id=owner_id)
+                if owner not in video.users:
+                    video.users.append(owner)
+        self.insert(video)
+            
         
         # owner_platform_ids = video_data.get("platform_owner_ids", [])
         self.session.flush() # Move changes from Python to the database's transactional layer

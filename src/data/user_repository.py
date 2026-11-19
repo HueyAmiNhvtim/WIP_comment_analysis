@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
 from src.data.base_repository import BaseRepository
-from typing import List, Dict
+from typing import List, Dict, Set
 from uuid import UUID as UUIDType
 
 from src.data.models import Users
@@ -52,7 +52,7 @@ class UserRepository(BaseRepository[Users]):
         result = self.session.execute(stmt)
         return result.rowcount
     
-    def ensure_users_exist(self, platform_user_ids: List[str]) -> Dict[str, UUIDType]:
+    def ensure_users_exist(self, platform_user_ids: Set[str]) -> Dict[str, UUIDType]:
         """
         Takes a list of platform user id
         and returns a mapping of user ids associated with their internal uuid primary key in the database!
@@ -61,7 +61,7 @@ class UserRepository(BaseRepository[Users]):
         """
         if not platform_user_ids:
             return {}
-        unique_uids = list(set(platform_user_ids))
+        unique_uids = list(platform_user_ids)
         # Fetch existing users
         stmt = select(Users).where(Users.platform_user_id.in_(unique_uids))
         existing_users = list(self.session.scalars(stmt).all())
