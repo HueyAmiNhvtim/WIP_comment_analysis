@@ -24,6 +24,7 @@ class Initialize:
     def initialize_extractors(self) -> Dict[str, BaseExtractor]:
         auth = AuthManager(env_path=self.env_path)
         return {
+            # Add other platforms here too.
             "youtube": YoutubeExtractor(youtube_client=auth.authenticate_youtube())
         }
 
