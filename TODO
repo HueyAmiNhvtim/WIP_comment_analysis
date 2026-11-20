@@ -1,7 +1,11 @@
 1. Add logger class to allow monitoring.
-2. Do the ingestion pipeline thing.
-3. Improve efficiency of the extractor, may involve digging into the livechat extractor itself.
-4. Analyze stuff? Get some ideas.
-5. Visualize the result? Use plotly or sth?
-6. Maybe put in Airflow and uhh, Spark? for learning purposes.
-7. Maybe put the thing on the Internet as a website? Tho that's quite far away.
+2. Do the ingestion pipeline thing and test the thing.
+3. I suppose use Youtube API to grab some videos from a bunch of channels to automate the collection for fun. In reality, I think we just use input in terms of video id and the thing will  analyze the comments within that video.
+4. (After all that's done) Improve efficiency of the extractor, may involve digging into the livechat extractor itself.
+5. Analyze stuff? Get some ideas, also find ways to use Pandas too.
+6. Visualize the result? Use plotly or sth?
+7. Maybe put in Airflow and uhh, Spark? for learning purposes.
+8. Maybe put the thing on the Internet as a website? Tho that's quite far away.
+
+For production stuff:
+    We're probably gonna put Alembic and postgres stuff into a brand new Dockerfile, and stuff that into the docker-compose.yml
